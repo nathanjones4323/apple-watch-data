@@ -11,6 +11,6 @@ def init_db_connection() -> Connection:
         `sqlalchemy.engine.base.Connection`: SQLAlchemy connection object
     """
     engine = create_engine(
-        url=f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@host.docker.internal:5432/{os.getenv('POSTGRES_DB')}")
+        url=f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}")
     conn = engine.connect()
     return conn
