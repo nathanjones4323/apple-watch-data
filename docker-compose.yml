@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  db:
+    container_name: postgis
+    hostname: postgis
+    image: postgis
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    # restart: on-failure
+    
+    env_file:
+      - ./db/.env
+
+    deploy:
+      # Mimic DO managed Postgres instance: 1GB RAM, 1CPU, $15
+      # resources:
+      #   limits:
+      #     memory: 1G
+      #     cpus: "1"
+    volumes: 
+      - postgis:/var/lib/postgis/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgis:
+    name: postgis
