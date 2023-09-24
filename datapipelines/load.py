@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from loguru import logger
 
-from utils import init_db_connection
+from db.utils import init_db_connection
 
 # Load environment variables from the .env file
 ### os.path.dirname(__file__): Gives you the directory of your Python script.

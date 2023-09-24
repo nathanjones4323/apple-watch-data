@@ -1,8 +1,10 @@
 from loguru import logger
 
-from extract import extract_apple_health_data, extract_strong_app_data
-from load import load_apple_health_data, load_strong_app_data
-from transform import transform_apple_health_data, transform_strong_data
+from datapipelines.extract import (extract_apple_health_data,
+                                   extract_strong_app_data)
+from datapipelines.load import load_apple_health_data, load_strong_app_data
+from datapipelines.transform import (transform_apple_health_data,
+                                     transform_strong_data)
 
 # Create a new logger
 logger.add("logs/log_{time}.log", rotation="500 MB", compression="zip")
