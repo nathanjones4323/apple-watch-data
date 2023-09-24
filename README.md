@@ -22,7 +22,22 @@
 
 ## 🏁 Getting Started <a name = "getting_started"></a>
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See [deployment](#deployment) for notes on how to deploy the project on a live system.
+Export your Apple Watch's health data from the Health app on your iPhone. You can do this by going to the Health app, clicking on your profile picture in the top right corner, and then clicking on "Export All Health Data". This will create a zip file with all of your health data. Unzip this file and place the contents in the `data` directory.
+
+Export your Strong App data by going to the Strong app, clicking on **Profile** \rarrow **Settings** \rarrow **Export Strong Data**. This will create a `.csv` file with all of your Strong data. Place the contents in the `data` directory.
+
+
+Start the container and seed the database with your health data
+
+```
+docker-compose -f docker-compose.yml up -d
+```
+
+Stop the container
+
+```
+docker-compose -f docker-compose.yml down
+```
 
 ### Prerequisites
 

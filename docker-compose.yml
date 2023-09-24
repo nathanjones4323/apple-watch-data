@@ -8,21 +8,21 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    # restart: on-failure
-    
     env_file:
       - ./db/.env
 
-    deploy:
-      # Mimic DO managed Postgres instance: 1GB RAM, 1CPU, $15
-      # resources:
-      #   limits:
-      #     memory: 1G
-      #     cpus: "1"
-    volumes: 
+    volumes:
       - postgis:/var/lib/postgis/data
     ports:
       - "5432:5432"
+
+  python-app:
+    image: postgis  # Use the same image as the 'db' service
+    container_name: python-app
+    build: ./  # Build context is the current directory
+    command: ["python3", "main.py"]  # Command to run your Python script
+    depends_on:
+      - db
 
 volumes:
   postgis:

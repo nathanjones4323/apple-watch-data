@@ -11,8 +11,8 @@ logger.add("logs/log_{time}.log", rotation="500 MB", compression="zip")
 logger.debug(f"Starting {__file__}")
 
 # Extract data
-apple_data = extract_apple_health_data(path="/Users/nathanjones/Downloads/health_exports/apple_health_export/export.xml")
-strong_data = extract_strong_app_data(path="/Users/nathanjones/Downloads/health_exports/strong_export/strong.csv")
+apple_data = extract_apple_health_data(path="./data/apple_health_export/export.xml")
+strong_data = extract_strong_app_data(path="./data/strong_export/strong.csv")
 
 # Transform data
 apple_health_df = transform_apple_health_data(apple_data)
