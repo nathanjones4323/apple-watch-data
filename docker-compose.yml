@@ -16,14 +16,61 @@ services:
     ports:
       - "5432:5432"
 
-  python-app:
-    image: postgis  # Use the same image as the 'db' service
-    container_name: python-app
-    build: ./  # Build context is the current directory
+  data-pipeline:
+    image: data-pipeline
+    container_name: data-pipeline
+    build: 
+      context: ./  # Build context is the current directory
+      dockerfile: Dockerfile
     command: ["python3", "main.py"]  # Command to run your Python script
     depends_on:
       - db
+    
+  metabase-backend:
+    image: metabase-backend
+    container_name: metabase-backend
+    build: 
+      context: ./metabase/backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./metabase/backend/.env
+    volumes: 
+      - metabase-backend:/var/lib/postgresql/data
+    ports:
+      - "1132:5432"
+  
+  metabase:
+    image: metabase
+    container_name: metabase
+    build:
+      context: ./metabase
+      dockerfile: Dockerfile
+    volumes:
+      - metabase:/metabase-data
+    ports:
+      - "3000:3000"
+    env_file:
+      ./metabase/.env
+    depends_on:
+      - metabase-backend
+    
+  # init-metabase-questions:
+  #   image: data-pipeline # This is the name of the image we built in the 1st step
+  #   container_name: init-metabase-questions
+  #   build: 
+  #     context: ./  # Build context is the current directory
+  #     dockerfile: Dockerfile
+  #   # Run the `create_questions.py` script inside the `datapipelines` folder
+  #   command: ["python3", "create_questions.py"]
+  #   depends_on:
+  #     - metabase-backend
+  #   restart: on-failure
+
 
 volumes:
   postgis:
     name: postgis
+  metabase-backend:
+    name: metabase-backend
+  metabase:
+    name: metabase

@@ -47,17 +47,23 @@ Docker ([Docker Desktop comes with Docker](https://www.docker.com/products/docke
 
 Clone the repoisitory
 ```
-git clone {repo}
+git clone https://github.com/nathanjones4323/healthy-py.git
 ```
 
 Navigate to the app's directory
 ```
-cd && cd `path_to_app`
+cd healthy-py
 ```
 
 Run the following in your terminal:
 ```
-docker-compose up -d
+docker-compose -f docker-compose.yml up -d
+```
+
+Stop the container
+
+```
+docker-compose -f docker-compose.yml down
 ```
 
 > :warning: If you need to rebuild and run the container run this command
