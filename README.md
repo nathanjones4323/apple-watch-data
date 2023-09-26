@@ -22,9 +22,30 @@
 
 ## 🏁 Getting Started <a name = "getting_started"></a>
 
-Export your Apple Watch's health data from the Health app on your iPhone. You can do this by going to the Health app, clicking on your profile picture in the top right corner, and then clicking on "Export All Health Data". This will create a zip file with all of your health data. Unzip this file and place the contents in the `data` directory.
+Export your Apple Watch's health data from the Health app on your iPhone. You can do this by going to the Health app, clicking on your profile picture in the top right corner, and then clicking on "Export All Health Data". 
 
-Export your Strong App data by going to the Strong app, clicking on **Profile** \rarrow **Settings** \rarrow **Export Strong Data**. This will create a `.csv` file with all of your Strong data. Place the contents in the `data` directory.
+This will create a zip file with all of your health data. Unzip this file and place the contents in the `data` directory. 
+
+Export your Strong App data by going to the Strong app, clicking on **Profile** ⇨ **Settings** ⇨ **Export Strong Data**.
+
+This will create a `.csv` file with all of your Strong data. Place the contents in the `data` directory.
+
+Clone the repoisitory
+```
+git clone https://github.com/nathanjones4323/healthy-py.git
+```
+
+Navigate to the app's directory
+```
+cd healthy-py
+```
+
+Create a `data` directory in the root of the app
+```
+mkdir data
+```
+
+Add your Apple Watch's health data and Strong App exports to the `data` directory.
 
 
 Start the container and seed the database with your health data
@@ -44,11 +65,6 @@ docker-compose -f docker-compose.yml down
 Docker ([Docker Desktop comes with Docker](https://www.docker.com/products/docker-desktop/))
 
 ## Running the App <a name = "usage"></a>
-
-Clone the repoisitory
-```
-git clone https://github.com/nathanjones4323/healthy-py.git
-```
 
 Navigate to the app's directory
 ```
