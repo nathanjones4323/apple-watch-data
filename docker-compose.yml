@@ -15,6 +15,11 @@ services:
       - postgis:/var/lib/postgis/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d postgres -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   data-pipeline:
     image: data-pipeline
@@ -24,7 +29,8 @@ services:
       dockerfile: Dockerfile
     command: ["python3", "main.py"]  # Command to run your Python script
     depends_on:
-      - db
+      db:
+        condition: service_healthy  # Wait for the db service to be healthy
     
   metabase-backend:
     image: metabase-backend
