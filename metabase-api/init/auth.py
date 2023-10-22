@@ -32,7 +32,7 @@ def auth():
         mb = Metabase_API(domain="http://metabase:3000/",
                           email=os.getenv("MB_ADMIN_EMAIL"), password=os.getenv("MB_ADMIN_PASSWORD"))
         logger.success("Connected to Metabase API")
-    except:
-        logger.error("Could connect to Metabase API")
+    except Exception as e:
+        logger.error(f"Could connect to Metabase API: {e}")
 
     return mb
