@@ -101,3 +101,4 @@ docker-compose up --force-recreate --build -d && docker image prune -f
 * Update the **Getting Started** section of the README with all of the steps to get the app running and initialized
 * Add Apple Health Questions
 * Create a dashboard with all of the questions
+* Make the start of the `init-metabase-questions` container wait using `docker-compose.yml` instead of using `time.sleep` with the `auth` function inside of `metabase-api/init/auth.py`

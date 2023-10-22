@@ -12,7 +12,6 @@ from ...db.utils import init_metabase_db_connection
 def is_initialized():
     try:
         conn = init_metabase_db_connection()
-        logger.success("Connected to database")
         df = pd.read_sql("select * from report_card limit 1", conn)
         if df.empty:
             logger.warning(
