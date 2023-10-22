@@ -57,6 +57,8 @@ def transform_apple_health_data(data: pd.DataFrame) -> pd.DataFrame:
         # rename columns
         pivot_df.columns = [camel_to_snake(col) for col in pivot_df.columns]
 
+        logger.success("Transformed Apple Health data")
+
         return pivot_df
     except Exception as e:
         logger.error(f"Could not transform Apple Health data: {e}")
@@ -89,6 +91,8 @@ def transform_strong_data(data: pd.DataFrame) -> pd.DataFrame:
         # Add a column for workout_id. workout_id is the concatenation of the `date` and `workout_name` columns
         data['workout_id'] = data['created_at'].astype(
             str) + "_" + data['workout_name'].astype(str)
+
+        logger.success("Transformed Strong data")
 
         return data
     except Exception as e:

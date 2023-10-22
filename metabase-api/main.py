@@ -8,7 +8,8 @@ from init.create_questions import (strong_sets, strong_top_exercises_by_volume,
 mb = auth()
 
 # Create Collection for Strong App
-create_collection(mb, collection_name="Strong App")
+create_collection(mb, collection_name="Strong App",
+                  parent_collection_name="Root")
 
 # Create Questions
 

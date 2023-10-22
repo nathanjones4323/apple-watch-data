@@ -15,6 +15,7 @@ def extract_apple_health_data(path) -> pd.DataFrame:
     # create DataFrame from a list (rows) of dictionaries (columns)
     try:
         data = pd.DataFrame(record_list)
+        logger.success("Created DataFrame from Apple Health XML file")
     except Exception as e:
         logger.error(f"Could not create DataFrame from Apple Health data: {e}")
     return data
@@ -23,6 +24,7 @@ def extract_apple_health_data(path) -> pd.DataFrame:
 def extract_strong_app_data(path) -> pd.DataFrame:
     try:
         data = pd.read_csv(path)
+        logger.success("Created DataFrame from Strong CSV file")
     except Exception as e:
         logger.error(f"Could not read Strong CSV file: {e}")
     return data
