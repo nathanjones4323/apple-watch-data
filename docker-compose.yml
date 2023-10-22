@@ -60,10 +60,11 @@ services:
     build: 
       context: ./  # Build context is the current directory
       dockerfile: Dockerfile
-    command: ["python3", "./metabase/backend/create_questions.py"]
+    command: ["python3", "./metabase-api/main.py"]
     depends_on:
       - metabase-backend
-    restart: on-failure
+    # Restart the container if it fails, but only try 3 times
+    restart: on-failure:3
 
 
 volumes:
