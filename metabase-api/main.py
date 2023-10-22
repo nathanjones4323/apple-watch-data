@@ -1,8 +1,8 @@
 from init.auth import auth
-from init.create_collections import create_collection
-from init.create_questions import (strong_sets, strong_top_exercises_by_volume,
-                                   strong_top_workouts,
-                                   strong_workout_duration_by_type)
+from init.collections import create_collection
+from init.questions import (strong_sets, strong_top_exercises_by_volume,
+                            strong_top_workouts,
+                            strong_workout_duration_by_type)
 
 # Authenticate API Session
 mb = auth()

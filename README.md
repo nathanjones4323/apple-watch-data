@@ -99,4 +99,5 @@ docker-compose up --force-recreate --build -d && docker image prune -f
   * graph.metrics
 * For the API to work, the Metabase admin must be logged in. This is not ideal. Need to find a way to authenticate the API calls without doing setup through the GUI.
 * Update the **Getting Started** section of the README with all of the steps to get the app running and initialized
-* Check if questions exist before initializing them (changes tot `create_questions.py` module required)
+* Add Apple Health Questions
+* Create a dashboard with all of the questions

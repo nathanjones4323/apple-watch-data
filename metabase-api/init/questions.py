@@ -1,3 +1,4 @@
+from loguru import logger
 from metabase_api import Metabase_API
 
 
@@ -35,8 +36,12 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         },
         "visualization_settings": visualization_settings
     }
-    mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
-                   table_id=table_id, verbose=True, custom_json=my_custom_json)
+    try:
+        mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
+                       table_id=table_id, custom_json=my_custom_json)
+        logger.success(f"Created question - {question_name}")
+    except Exception as e:
+        logger.error(f"Could not create question - {question_name}\n{e}")
 
 
 def strong_workout_duration_by_type(mb: Metabase_API):
@@ -94,7 +99,7 @@ def strong_top_exercises_by_volume(mb: Metabase_API):
         group by time_period, workout_name, exercise_name
         order by time_period desc, number_of_sets desc
         """
-    create_sql_question(mb, query=query, question_name="Sets Over Time",
+    create_sql_question(mb, query=query, question_name="Top Exercises by Volume",
                         display="table", db_id=2, collection_id=2, table_id=48)
 
 
