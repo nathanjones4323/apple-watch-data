@@ -1,19 +1,4 @@
-import time
-
-from loguru import logger
 from metabase_api import Metabase_API
-
-for i in range(180):
-    time.sleep(1)
-    i = 180 - i
-    if i % 10 == 0:
-        logger.info(f"Waiting for Metabase to start... {i} seconds remaining")
-
-# Have to use the container name as the host name because that is the name of the service in the docker-compose.yml file
-mb = Metabase_API(domain="http://metabase:3000/",
-                  email="nathanjones4323@gmail.com", password="450030778")
-
-mb.create_collection("Strong App", parent_collection_name='Root')
 
 
 def set_visualization_settings(show_values: bool = True, x_axis_title: str = None, y_axis_title: str = None, dimensions: list = None, metrics: list = None):
@@ -62,6 +47,7 @@ def strong_workout_duration_by_type(mb: Metabase_API):
             , avg(duration) / 60.0 as average_workout_length_minutes
             , percentile_cont(0.5) within group (order by duration) / 60.0 as median_workout_length_minutes
         from strong_app_raw
+        where 1=1
         group by workout_name
         order by average_workout_length_minutes desc
         """
@@ -76,4 +62,57 @@ def strong_workout_duration_by_type(mb: Metabase_API):
                         display="bar", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
 
 
-strong_workout_duration_by_type(mb)
+def strong_sets(mb: Metabase_API):
+    query = """
+        select 
+            date_trunc('day', created_at) as time_period
+            , workout_name
+            , count(*) as number_of_sets
+        from strong_app_raw
+        group by time_period, workout_name
+        order by time_period, number_of_sets desc
+        """
+    visualization_settings = set_visualization_settings(
+        x_axis_title="Time Period",
+        y_axis_title="Number of Sets",
+        dimensions=["time_period", "workout_name"],
+        metrics=["number_of_sets"]
+    )
+    create_sql_question(mb, query=query, question_name="Sets Over Time",
+                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
+
+
+def strong_top_exercises_by_volume(mb: Metabase_API):
+    query = """
+        select 
+            date_trunc('day', created_at) as time_period
+            , workout_name
+            , exercise_name
+            , count(*) as number_of_sets
+        from strong_app_raw
+        where 1=1	
+        group by time_period, workout_name, exercise_name
+        order by time_period desc, number_of_sets desc
+        """
+    create_sql_question(mb, query=query, question_name="Sets Over Time",
+                        display="table", db_id=2, collection_id=2, table_id=48)
+
+
+def strong_top_workouts(mb: Metabase_API):
+    query = """
+        select 
+            date_trunc('month', created_at) as time_period
+            , workout_name
+            , count(distinct workout_id) as number_of_workout_days
+        from strong_app_raw
+        group by time_period, workout_name
+        order by time_period desc, number_of_workout_days desc
+        """
+    visualization_settings = set_visualization_settings(
+        x_axis_title="Time Period",
+        y_axis_title="Number of Sets",
+        dimensions=["time_period", "workout_name"],
+        metrics=["number_of_workout_days"]
+    )
+    create_sql_question(mb, query=query, question_name="Workouts Over Time",
+                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
