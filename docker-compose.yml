@@ -54,17 +54,16 @@ services:
     depends_on:
       - metabase-backend
     
-  # init-metabase-questions:
-  #   image: data-pipeline # This is the name of the image we built in the 1st step
-  #   container_name: init-metabase-questions
-  #   build: 
-  #     context: ./  # Build context is the current directory
-  #     dockerfile: Dockerfile
-  #   # Run the `create_questions.py` script inside the `datapipelines` folder
-  #   command: ["python3", "create_questions.py"]
-  #   depends_on:
-  #     - metabase-backend
-  #   restart: on-failure
+  init-metabase-questions:
+    image: data-pipeline # This is the name of the image we built in the 1st step
+    container_name: init-metabase-questions
+    build: 
+      context: ./  # Build context is the current directory
+      dockerfile: Dockerfile
+    command: ["python3", "./metabase/backend/create_questions.py"]
+    depends_on:
+      - metabase-backend
+    restart: on-failure
 
 
 volumes:

@@ -16,6 +16,7 @@
 - [About](#about)
 - [Getting Started](#getting_started)
 - [Usage](#usage)
+- [TODO](#todo)
 
 ## 🧐 About <a name = "about"></a>
 
@@ -86,3 +87,15 @@ docker-compose -f docker-compose.yml down
 ```
 docker-compose up --force-recreate --build -d && docker image prune -f
 ```
+
+## TODO <a name = "todo"></a>
+
+* `./metabase/docker-entrypoint-initdb.d/create_questions.py` needs to run as a DB init script.
+* When initializing Metabase with the automated reports, create the "Strong" `collection` in metabase before the `report_card`
+* Data types are broken when you import the `report_card` data into Metabase. Need to fix this.
+* Must disable the Friendly display names setting in Metabase admin for the `report_card` data to import correctly. Manual for now
+* Find a dynamic way to set the values for 
+  * graph.x_axis.title_text
+  * graph.y_axis.title_text
+  * graph.dimensions
+  * graph.metrics
