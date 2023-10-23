@@ -12,9 +12,8 @@ from datapipelines.transform import (transform_apple_health_data,
 logger.add("logs/log_{time}.log", rotation="500 MB", compression="zip")
 
 # Extract data
-apple_data = extract_apple_health_data(
-    path="./data/apple_health_export/export.xml")
-strong_data = extract_strong_app_data(path="./data/strong_export/strong.csv")
+apple_data = extract_apple_health_data(start_date="2023-09-05")
+strong_data = extract_strong_app_data(start_date="2023-01-01")
 
 # Transform data
 apple_health_df = transform_apple_health_data(apple_data)

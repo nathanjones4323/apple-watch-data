@@ -43,6 +43,10 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
     except Exception as e:
         logger.error(f"Could not create question - {question_name}\n{e}")
 
+############################################
+# Strong App Questions
+############################################
+
 
 def strong_workout_duration_by_type(mb: Metabase_API):
     query = """
@@ -125,3 +129,29 @@ def strong_workouts(mb: Metabase_API):
     )
     create_sql_question(mb, query=query, question_name="Workouts Over Time",
                         display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
+
+
+############################################
+# Apple Health Questions
+############################################
+def apple_calories(mb: Metabase_API):
+    query = """
+        select 
+            date_trunc('day', end_date) as time_period
+            , sum(active_energy_burned) as active_calories_burned
+            , sum(basal_energy_burned) as resting_calories_burned
+            , sum(active_energy_burned) + sum(basal_energy_burned) as total_calories_burned
+        from apple_health_raw
+        where 1=1
+        group by time_period
+        order by time_period desc
+        """
+    visualization_settings = set_visualization_settings(
+        x_axis_title="Time Period",
+        y_axis_title="Calories Burned",
+        dimensions=["time_period"],
+        metrics=["total_calories_burned",
+                 "active_calories_burned", "resting_calories_burned"]
+    )
+    create_sql_question(mb, query=query, question_name="Calories Burned Over Time",
+                        display="line", db_id=2, collection_id=3, table_id=40, visualization_settings=visualization_settings)

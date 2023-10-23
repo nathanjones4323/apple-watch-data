@@ -94,6 +94,60 @@ docker-compose up --force-recreate --build -d && docker image prune -f
 
 * Update the **Getting Started** section of the README with all of the steps to get the app running and initialized
 * Add Apple Health Questions
+  * Sleep
+    * Sleep Time - What time do I fall asleep?
+    * Wake Time - What time do I wake up?
+    * Duration - How long do I sleep?
+    * Sleep by stage - How much time do I spend in each sleep stage?
+    * Average/Median Sleep Time - What is my average/median sleep time?
+  
+  * Activity
+    * Calories - How many calories do I burn?
+      * Resting Calories - How many calories do I burn while resting?
+      * Active Calories - How many calories do I burn while active?
+    * Steps - How many steps do I take?
+    * Distance - How far do I walk?
+    * Flights Climbed - How many flights of stairs do I climb?
+    * Exercise Time - How much time do I spend exercising?
+    * Stand Time - How much time do I spend standing?
+    * V02 Max - What is my V02 Max?
+  
+  * Heart Rate
+    * Max Heart Rate - What is my max heart rate?
+    * Resting Heart Rate - What is my resting heart rate?
+    * Average/Median Heart Rate - What is my average/median heart rate?
+    * Heart Rate Variability - What is my heart rate variability?
+    * Heart Rate by Activity - What is my heart rate during different activities?
+
+  * Workouts
+    * Workout Time - How much time do I spend working out?
+    * Workout Type - What types of workouts do I do?
+    * Workout Intensity - How intense are my workouts?
+    * Workout by Activity - How much time do I spend doing different activities?
+    * Workout by Intensity - How much time do I spend doing different intensities?
+    * Workout by Type - How much time do I spend doing different types of workouts?
+    * Workout by Heart Rate - How much time do I spend in different heart rate zones?
+    * Workout by Distance - How much time do I spend traveling different distances?
+    * Workout by Calories - How much time do I spend burning different amounts of calories?
+    * Workout by Steps - How much time do I spend taking different amounts of steps?
+    * Workout by Flights Climbed - How much time do I spend climbing different amounts of flights?
+    * Workout by Elevation - How much time do I spend at different elevations?
+    * Workout by Pace - How much time do I spend at different paces?
+    * Workout by Cadence - How much time do I spend at different cadences?
+    * Workout by Heart Rate Variability - How much time do I spend at different heart rate variabilities?
+    * Workout by Heart Rate - How much time do I spend at different heart rates?
+    * Workout by Heart Rate Zone - How much time do I spend at different heart rate zones?
+    * Workout by Heart Rate Zone and Type - How much time do I spend at different heart rate zones for different types of workouts?
+    * Workout by Heart Rate Zone and Intensity - How much time do I spend at different heart rate zones for different intensities?
+    * Workout by Heart Rate Zone and Distance - How much time do I spend at different heart rate zones for different distances?
+    * Workout by Heart Rate Zone and Calories - How much time do I spend at different heart rate zones for different calories?
+    * Workout by Heart Rate Zone and Steps - How much time do I spend at different heart rate zones for different steps?
+    * Workout by Heart Rate Zone and Flights Climbed - How much time do I spend at different heart rate zones for different flights climbed?
+    * Workout by Heart Rate Zone and Elevation - How much time do I spend at different heart rate zones for different elevations?
+    * Workout by Heart Rate Zone and Pace - How much time do I spend at different
+
+  * Research and brainstorm more questions
+
 * Create a dashboard with all of the questions
 * Make the start of the `init-metabase-questions` container wait using `docker-compose.yml` instead of using `time.sleep` with the `auth` function inside of `metabase-api/init/auth.py`
 * For the API to work, the Metabase admin must be logged in. This is not ideal. Need to find a way to authenticate the API calls without doing setup through the GUI.
