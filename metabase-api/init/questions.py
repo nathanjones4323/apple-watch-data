@@ -36,10 +36,15 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         },
         "visualization_settings": visualization_settings
     }
+    logger.debug(f"my_custom_json: {my_custom_json}")
     try:
-        mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
-                       table_id=table_id, custom_json=my_custom_json)
-        logger.success(f"Created question - {question_name}")
+        api_response = mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
+                                      table_id=table_id, custom_json=my_custom_json)
+        if "Card Creation Failed." in api_response:
+            logger.success(f"Created question - {question_name}")
+        else:
+            logger.error(
+                f"Could not create question - {question_name}\n{api_response}")
     except Exception as e:
         logger.error(f"Could not create question - {question_name}\n{e}")
 
@@ -87,7 +92,7 @@ def strong_sets(mb: Metabase_API):
                         display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
 
 
-def strong_top_exercises_by_volume(mb: Metabase_API):
+def strong_exercises_by_volume(mb: Metabase_API):
     query = """
         select 
             date_trunc('day', created_at) as time_period
@@ -103,7 +108,7 @@ def strong_top_exercises_by_volume(mb: Metabase_API):
                         display="table", db_id=2, collection_id=2, table_id=48)
 
 
-def strong_top_workouts(mb: Metabase_API):
+def strong_workouts(mb: Metabase_API):
     query = """
         select 
             date_trunc('month', created_at) as time_period

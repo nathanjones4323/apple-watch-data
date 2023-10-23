@@ -60,6 +60,9 @@ services:
     build: 
       context: ./  # Build context is the current directory
       dockerfile: Dockerfile
+    # Need this such that the import statement `from db.utils import init_metabase_db_connection` works inside the container
+    environment:
+      - PYTHONPATH=/app
     command: ["python3", "./metabase-api/main.py"]
     depends_on:
       - metabase-backend
