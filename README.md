@@ -30,13 +30,14 @@ Docker ([Docker Desktop comes with Docker](https://www.docker.com/products/docke
 
 ### Getting the data
 
-Export your Apple Watch's health data from the Health app on your iPhone. You can do this by going to the Health app, clicking on your profile picture in the top right corner, and then clicking on "Export All Health Data". 
+Export your Apple Watch's health data from the Health app on your iPhone. 
 
-This will create a zip file with all of your health data. Unzip this file and place the contents in the `data` directory. 
+Open the Health app:
+Click **Profile** (profile picture right corner) ⇨ **Export All Health Data**. This will create a zip file with all of your health data. Unzip this file.
 
-Export your Strong App data by going to the Strong app, clicking on **Profile** ⇨ **Settings** ⇨ **Export Strong Data**.
+Export your Strong App data by going to the Strong app, clicking on **Profile** ⇨ **Settings** ⇨ **Export Strong Data**. This will create a `.csv` file with all of your Strong data. 
 
-This will create a `.csv` file with all of your Strong data. Place the contents in the `data` directory.
+Get these files onto the computer that you are running the app on (I usually AirDrop them to my Mac).
 
 ### Adding the data to the appropriate directories
 
@@ -57,6 +58,25 @@ mkdir data
 
 Add your Apple Watch's health data (the entire folder) and Strong App exports to the `data` directory.
 
+At this point your `data` directory should look like this:
+
+```
+data
+├── apple_health_export
+│   ├── electrocardiograms
+│   │   ├── ecg_2023-09-05.csv
+│   │   ├── ...
+│   │   └── ecg_2023-09-06.csv
+│   ├── export.xml
+│   ├── export_cda.xml
+│   └── workout-routes
+│       ├── route_2023-09-05_8.40pm.gpx
+│       ├── ...
+│       └── route_2023-09-08_7.20pm.gpx
+└── strong_export
+    └── strong.csv
+```
+
 ### Creating and populating the .env files
 
 Create an `.env` file in each of these directories:
@@ -67,10 +87,12 @@ healthy-py/metabase
 healthy-py/metabase/backend
 ```
 
+By running the following commands inside of the root directory:
+
 ```zsh
-touch healthy-py/db/.env
-touch healthy-py/metabase/.env
-touch healthy-py/metabase/backend/.env
+mkdir db && touch db/.env
+mkdir metabase && touch metabase/.env
+mkdir metabase/backend && touch metabase/backend/.env
 ```
 
 Fill in the following values in the `.env` files:
@@ -118,6 +140,28 @@ Start the container and seed the database with your health data
 ```
 docker-compose -f docker-compose.yml up -d
 ```
+
+If this is your first time running the app, you'll have to wait ~30 seconds for Metabase to start before accessing http://localhost:3000/.
+
+If the page is not loading, wait a few more seconds and refresh. Once you see the Metabase set up page, you can proceed to set up your admin user and connect to the database.
+
+> :warning: You must use values from the `metabase/.env` file and `db/.env` file when setting up the admin user and connecting to the database.
+
+You should use the following values when setting up the admin user:
+
+````
+# Admin User Credentials
+MB_ADMIN_EMAIL
+MB_ADMIN_PASSWORD
+
+# Database Credentials
+POSTGRES_USER
+POSTGRES_PASSWORD
+POSTGRES_DB
+POSTGRES_PORT
+```
+
+After you have set up the admin user and connected to the database, you will see that all of the automatic analysis (Metabase collections, questions, and dashboards) has been added. (This process takes ~5 minutes, you can check the status of the process by inspecting the logs of the `init-metabase-questions` container)
 
 Stop the container
 
