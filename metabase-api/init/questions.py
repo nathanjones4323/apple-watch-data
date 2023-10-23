@@ -154,4 +154,4 @@ def apple_calories(mb: Metabase_API):
                  "active_calories_burned", "resting_calories_burned"]
     )
     create_sql_question(mb, query=query, question_name="Calories Burned Over Time",
-                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
+                        display="line", db_id=2, collection_id=3, table_id=40, visualization_settings=visualization_settings)
