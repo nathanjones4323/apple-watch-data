@@ -1,13 +1,15 @@
 import re
 
 import pandas as pd
+from loguru import logger
 
 
 def camel_to_snake(camel_case):
   # Check for an uppercase letter in the string
     if re.search(r'[A-Z]', camel_case):
         # Replace all uppercase letters with an underscore and lowercase letter
-        snake_case = re.sub(r'([A-Z])', lambda x: '_' + x.group(0).lower(), camel_case)
+        snake_case = re.sub(r'([A-Z])', lambda x: '_' +
+                            x.group(0).lower(), camel_case)
         # Remove the first underscore only if it is the first character in the string
         snake_case = re.sub(r'^_', '', snake_case)
         # Remove any whitespaces
@@ -28,32 +30,40 @@ def transform_apple_health_data(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A modified pandas DataFrame with all column names converted to snake_case
     """
-    
-    # proper type to dates
-    for col in ['creationDate', 'startDate', 'endDate']:
-        data[col] = pd.to_datetime(data[col])
 
-    # value is numeric, NaN if fails
-    data['value'] = pd.to_numeric(data['value'], errors='coerce')
+    try:
+        # proper type to dates
+        for col in ['creationDate', 'startDate', 'endDate']:
+            data[col] = pd.to_datetime(data[col])
 
-    # some records do not measure anything, just count occurences
-    # filling with 1.0 (= one time) makes it easier to aggregate
-    data['value'] = data['value'].fillna(1.0)
+        # value is numeric, NaN if fails
+        data['value'] = pd.to_numeric(data['value'], errors='coerce')
 
-    # shorter observation names: use vectorized replace function
-    data['type'] = data['type'].str.replace('HKQuantityTypeIdentifier', '')
-    data['type'] = data['type'].str.replace('HKCategoryTypeIdentifier', '')
+        # some records do not measure anything, just count occurences
+        # filling with 1.0 (= one time) makes it easier to aggregate
+        data['value'] = data['value'].fillna(1.0)
 
-    # pivot and resample
-    pivot_df = data.pivot_table(index='endDate', columns='type', values='value')
-    
-    # Make endDate a column instead of the index
-    pivot_df.reset_index(inplace=True)
-    
-    # rename columns
-    pivot_df.columns = [camel_to_snake(col) for col in pivot_df.columns]
-    
-    return pivot_df
+        # shorter observation names: use vectorized replace function
+        data['type'] = data['type'].str.replace('HKQuantityTypeIdentifier', '')
+        data['type'] = data['type'].str.replace('HKCategoryTypeIdentifier', '')
+
+        # pivot and resample
+        pivot_df = data.pivot_table(
+            index='endDate', columns='type', values='value')
+
+        # Make endDate a column instead of the index
+        pivot_df.reset_index(inplace=True)
+
+        # rename columns
+        pivot_df.columns = [camel_to_snake(col) for col in pivot_df.columns]
+
+        logger.success("Transformed Apple Health data")
+        logger.debug(f"Transformed Apple Health dataframe: {pivot_df}")
+
+        return pivot_df
+    except Exception as e:
+        logger.error(f"Could not transform Apple Health data: {e}")
+        return data
 
 
 def transform_strong_data(data: pd.DataFrame) -> pd.DataFrame:
@@ -65,19 +75,28 @@ def transform_strong_data(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A modified pandas DataFrame with all column names converted to snake_case
     """
-    
-    # proper type to dates
-    for col in ['Date']:
-        data[col] = pd.to_datetime(data[col])
-    
-    # Convert Duration to seconds
-    data['Duration'] = pd.to_timedelta(data['Duration']).dt.total_seconds().astype(int)
 
-    # rename columns
-    data.columns = [camel_to_snake(col) for col in data.columns]
-    data.rename(columns={'date': 'created_at'}, inplace=True)
+    try:
+        # proper type to dates
+        for col in ['Date']:
+            data[col] = pd.to_datetime(data[col])
 
-    # Add a column for workout_id. workout_id is the concatenation of the `date` and `workout_name` columns
-    data['workout_id'] = data['created_at'].astype(str) + "_" + data['workout_name'].astype(str)
+        # Convert Duration to seconds
+        data['Duration'] = pd.to_timedelta(
+            data['Duration']).dt.total_seconds().astype(int)
 
-    return data
+        # rename columns
+        data.columns = [camel_to_snake(col) for col in data.columns]
+        data.rename(columns={'date': 'created_at'}, inplace=True)
+
+        # Add a column for workout_id. workout_id is the concatenation of the `date` and `workout_name` columns
+        data['workout_id'] = data['created_at'].astype(
+            str) + "_" + data['workout_name'].astype(str)
+
+        logger.success("Transformed Strong data")
+        logger.debug(f"Transformed Strong dataframe: {data}")
+
+        return data
+    except Exception as e:
+        logger.error(f"Could not transform Strong data: {e}")
+        return data
