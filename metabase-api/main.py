@@ -2,8 +2,9 @@ import os
 
 from init.auth import auth
 from init.collections import create_collection
-from init.questions import (strong_exercises_by_volume, strong_sets,
-                            strong_workout_duration_by_type, strong_workouts)
+from init.questions import (apple_calories, strong_exercises_by_volume,
+                            strong_sets, strong_workout_duration_by_type,
+                            strong_workouts)
 from loguru import logger
 
 # Load environment variables from the .env file
@@ -31,6 +32,7 @@ if mb:
     strong_workouts(mb)
 
     # Inside the Apple Health Collection
+    apple_calories(mb)
 
     # Success message
     logger.success("Successfully initialized all metabase questions")
