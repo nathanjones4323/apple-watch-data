@@ -3,25 +3,32 @@
  <img width=200px height=200px src="" alt="Project logo"></a>
 </p>
 
-<h3 align="center">PyApple Watch</h3>
+<h3 align="center">healthy-py</h3>
 
 ---
 
-<p align="center"> Parsing your Apple Watch's data exports with Python
+<p align="center"> Analyze the health data from "all the things" in one place using Python, Docker, and Metabase.
     <br> 
 </p>
 
 ## 📝 Table of Contents
 
 - [About](#about)
+- [Prerequisites](#prerequisites)
 - [Getting Started](#getting_started)
 - [Usage](#usage)
 - [TODO](#todo)
 
 ## 🧐 About <a name = "about"></a>
 
+## 🔒 Prerequisites <a name = "prerequisites"></a>
+
+Docker ([Docker Desktop comes with Docker](https://www.docker.com/products/docker-desktop/))
+
 
 ## 🏁 Getting Started <a name = "getting_started"></a>
+
+### Getting the data
 
 Export your Apple Watch's health data from the Health app on your iPhone. You can do this by going to the Health app, clicking on your profile picture in the top right corner, and then clicking on "Export All Health Data". 
 
@@ -30,6 +37,8 @@ This will create a zip file with all of your health data. Unzip this file and pl
 Export your Strong App data by going to the Strong app, clicking on **Profile** ⇨ **Settings** ⇨ **Export Strong Data**.
 
 This will create a `.csv` file with all of your Strong data. Place the contents in the `data` directory.
+
+### Adding the data to the appropriate directories
 
 Clone the repoisitory
 ```
@@ -46,33 +55,66 @@ Create a `data` directory in the root of the app
 mkdir data
 ```
 
-Add your Apple Watch's health data and Strong App exports to the `data` directory.
+Add your Apple Watch's health data (the entire folder) and Strong App exports to the `data` directory.
 
+### Creating and populating the .env files
 
-Start the container and seed the database with your health data
+Create an `.env` file in each of these directories:
 
-```
-docker-compose -f docker-compose.yml up -d
-```
-
-Stop the container
-
-```
-docker-compose -f docker-compose.yml down
+```zsh
+healthy-py/db
+healthy-py/metabase
+healthy-py/metabase/backend
 ```
 
-### Prerequisites
+```zsh
+touch healthy-py/db/.env
+touch healthy-py/metabase/.env
+touch healthy-py/metabase/backend/.env
+```
 
-Docker ([Docker Desktop comes with Docker](https://www.docker.com/products/docker-desktop/))
+Fill in the following values in the `.env` files:
 
-## Running the App <a name = "usage"></a>
+`healthy-py/db/.env` - These will be the values you input inside of the Metabase UI when you create an admin user and connect to the database.
+
+```zsh
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=
+POSTGRES_PORT=
+```
+
+`healthy-py/metabase/.env` - These values will be automaticaly identified and used by Metabase when you run the container to set up the Metabase instance
+
+```zsh
+MB_DB_TYPE=
+MB_DB_DBNAME=
+MB_DB_PORT=5432
+MB_DB_USER=
+MB_DB_PASS=
+MB_DB_HOST=metabase-backend
+# Admin User Credentials
+MB_ADMIN_EMAIL=
+MB_ADMIN_PASSWORD=
+```
+
+`healthy-py/metabase/backend/.env` - These values will be automaticaly identified and used by Metabase when you run the container to initialize a user for the Metabase backend
+
+```zsh
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=
+```
+
+## 🏃 Usage <a name = "usage"></a>
 
 Navigate to the app's directory
 ```
 cd healthy-py
 ```
 
-Run the following in your terminal:
+Start the container and seed the database with your health data
+
 ```
 docker-compose -f docker-compose.yml up -d
 ```
@@ -88,7 +130,7 @@ docker-compose -f docker-compose.yml down
 docker-compose up --force-recreate --build -d && docker image prune -f
 ```
 
-## TODO <a name = "todo"></a>
+## 📓 TODO <a name = "todo"></a>
 
 *TODOs are in order of priority*
 
