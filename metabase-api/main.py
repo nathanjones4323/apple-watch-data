@@ -18,6 +18,10 @@ if mb:
     create_collection(mb, collection_name="Strong App",
                       parent_collection_name="Root")
 
+    # Create Collection for Apple Health
+    create_collection(mb, collection_name="Apple Health",
+                      parent_collection_name="Root")
+
     # Create Questions
 
     # Inside the Strong App Collection
@@ -25,4 +29,8 @@ if mb:
     strong_sets(mb)
     strong_exercises_by_volume(mb)
     strong_workouts(mb)
+
+    # Inside the Apple Health Collection
+
+    # Success message
     logger.success("Successfully initialized all metabase questions")
