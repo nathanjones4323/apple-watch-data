@@ -31,20 +31,15 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         "display": display,
         'dataset_query': {
             'database': db_id,
-            'native': {'query': query},
+            'native': {'query': query.strip()},
             'type': 'native'
         },
         "visualization_settings": visualization_settings
     }
-    logger.debug(f"my_custom_json: {my_custom_json}")
     try:
         api_response = mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
                                       table_id=table_id, custom_json=my_custom_json)
-        if "Card Creation Failed." in api_response:
-            logger.success(f"Created question - {question_name}")
-        else:
-            logger.error(
-                f"Could not create question - {question_name}\n{api_response}")
+        logger.success(f"Successfully created question - {question_name}")
     except Exception as e:
         logger.error(f"Could not create question - {question_name}\n{e}")
 
@@ -104,8 +99,12 @@ def strong_exercises_by_volume(mb: Metabase_API):
         group by time_period, workout_name, exercise_name
         order by time_period desc, number_of_sets desc
         """
-    create_sql_question(mb, query=query, question_name="Top Exercises by Volume",
-                        display="table", db_id=2, collection_id=2, table_id=48)
+    visualization_settings = set_visualization_settings(
+        dimensions=["time_period", "workout_name", "exercise_name"],
+        metrics=["time_period", "workout_name", "exercise_name"]
+    )
+    create_sql_question(mb, query=query, question_name="Test Card",
+                        display="table", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
 
 
 def strong_workouts(mb: Metabase_API):
