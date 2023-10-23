@@ -27,7 +27,8 @@ def load_apple_health_data(transformed_data):
                                 schema="public", if_exists="replace", index_label="id")
         # Close out DB connection
         conn.close()
-        logger.success("Loaded Apple Health data to DB")
+        logger.success(
+            f"Loaded {transformed_data.shape[0]} rows of Apple Health data to DB")
     except:
         logger.error("Could not load apple_health data to DB")
 
@@ -40,7 +41,8 @@ def load_strong_app_data(transformed_data):
                                 schema="public", if_exists="replace", index_label="id")
         # Close out DB connection
         conn.close()
-        logger.success("Loaded Strong App data to DB")
+        logger.success(
+            f"Loaded {transformed_data.shape[0]} rows of Strong App data to DB")
     except:
         logger.error("Could not load strong_app data to DB")
 

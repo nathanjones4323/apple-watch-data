@@ -58,6 +58,7 @@ def transform_apple_health_data(data: pd.DataFrame) -> pd.DataFrame:
         pivot_df.columns = [camel_to_snake(col) for col in pivot_df.columns]
 
         logger.success("Transformed Apple Health data")
+        logger.debug(f"Transformed Apple Health dataframe: {pivot_df}")
 
         return pivot_df
     except Exception as e:
@@ -93,6 +94,7 @@ def transform_strong_data(data: pd.DataFrame) -> pd.DataFrame:
             str) + "_" + data['workout_name'].astype(str)
 
         logger.success("Transformed Strong data")
+        logger.debug(f"Transformed Strong dataframe: {data}")
 
         return data
     except Exception as e:
