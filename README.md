@@ -17,9 +17,21 @@
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting_started)
 - [Usage](#usage)
+- [Improvements](#improvements)
 - [TODO](#todo)
 
 ## 🧐 About <a name = "about"></a>
+
+This is a full stack BI application powered by Python, Docker, and Metabase. It is designed to be a one stop shop for analyzing all of your health data from all of your favorite sources:
+
+### Supported Data Sources
+
+- ⌚ [Apple Health Data](https://www.apple.com/ios/health/)
+- 🏋️ [Strong App](https://www.strong.app/)
+
+### Roadmap Data Sources
+
+There are many more data sources that I would like to add to this app. If you have any suggestions, please open an issue or a pull request!
 
 ## 🔒 Prerequisites <a name = "prerequisites"></a>
 
