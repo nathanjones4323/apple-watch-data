@@ -103,7 +103,7 @@ def strong_exercises_by_volume(mb: Metabase_API):
         dimensions=["time_period", "workout_name", "exercise_name"],
         metrics=["time_period", "workout_name", "exercise_name"]
     )
-    create_sql_question(mb, query=query, question_name="Test Card",
+    create_sql_question(mb, query=query, question_name="Exercises by Volume",
                         display="table", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
 
 
