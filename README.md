@@ -161,7 +161,7 @@ If the page is not loading, wait a few more seconds and refresh. Once you see th
 
 You should use the following values when setting up the admin user:
 
-````
+```
 # Admin User Credentials
 MB_ADMIN_EMAIL
 MB_ADMIN_PASSWORD
@@ -182,6 +182,7 @@ docker-compose -f docker-compose.yml down
 ```
 
 > :warning: If you need to rebuild and run the container run this command
+
 ```
 docker-compose up --force-recreate --build -d && docker image prune -f
 ```
