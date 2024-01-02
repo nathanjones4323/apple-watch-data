@@ -17,7 +17,6 @@
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting_started)
 - [Usage](#usage)
-- [Improvements](#improvements)
 - [TODO](#todo)
 
 ## 🧐 About <a name = "about"></a>

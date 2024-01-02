@@ -155,3 +155,23 @@ def apple_calories(mb: Metabase_API):
     )
     create_sql_question(mb, query=query, question_name="Calories Burned Over Time",
                         display="line", db_id=2, collection_id=3, table_id=40, visualization_settings=visualization_settings)
+
+# def time_period_metric_template(metric_query: str, timestamp_column: str):
+#     query = f"""
+#         select
+#             date_trunc({{{{date_granularity}}}}, {timestamp_column}) as time_period{metric_query}
+#         where 1=1
+#             and case
+#             when
+#                 lower(trim({{{{date_granularity}}}})) = 'quarter'
+#             then
+#                 {timestamp_column} between date_trunc({{{{date_granularity}}}}, now() - (3 * {{{{time_periods_ago}}}}::numeric || ' months')::interval)
+#                 and (case when {{{{include_current_time_period}}}}::boolean='true' then now() else date_trunc({{{{date_granularity}}}}, now()) end)
+#             else
+#                 {timestamp_column} between date_trunc({{{{date_granularity}}}}, now() - ({{{{time_periods_ago}}}}::numeric || {{{{date_granularity}}}})::interval)
+#                 and (case when {{{{include_current_time_period}}}}::boolean='true' then now() else date_trunc({{{{date_granularity}}}}, now()) end)
+#             end
+#         group by time_period
+#         order by time_period desc
+#         """
+#     return query
