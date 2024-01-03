@@ -1,3 +1,5 @@
+import uuid
+
 from loguru import logger
 from metabase_api import Metabase_API
 
@@ -36,6 +38,45 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         },
         "visualization_settings": visualization_settings
     }
+    try:
+        api_response = mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
+                                      table_id=table_id, custom_json=my_custom_json)
+        logger.success(f"Successfully created question - {question_name}")
+    except Exception as e:
+        logger.error(f"Could not create question - {question_name}\n{e}")
+
+
+def create_sql_timeseries_question(mb: Metabase_API, query: str, display: str = "table", question_name: str = "test_card", db_id: int = 2, collection_id: int = 2, table_id: int = 48, visualization_settings: dict = None, timestamp_column: str = "created_at"):
+
+    my_custom_json = {
+        'name': question_name,
+        "display": display,
+        'dataset_query': {
+            'database': db_id,
+            'native': {
+                'query': query.strip(),
+                'template-tags': {
+                    "date_granularity":
+                        {"type": "text",
+                         "name": "date_granularity",
+                         "id": str(uuid.uuid4()),
+                         "display-name": "Date Granularity",
+                         "required": True,
+                         "default": ["Week"]},
+                    timestamp_column:
+                        {"type": "dimension",
+                         "name": timestamp_column,
+                         "id": str(uuid.uuid4()),
+                         "display-name": timestamp_column.replace("_", " ").title(),
+                         "dimension": ["field", 457, None],
+                         "widget-type": "date/all-options"}
+                }
+            },
+            'type': 'native',
+        },
+        "visualization_settings": visualization_settings
+    }
+    logger.debug(f"my_custom_json: {my_custom_json}")
     try:
         api_response = mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
                                       table_id=table_id, custom_json=my_custom_json)
