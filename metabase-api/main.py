@@ -2,9 +2,10 @@ import os
 
 from init.auth import auth
 from init.collections import create_collection
-from init.questions import (apple_calories, strong_exercises_by_volume,
-                            strong_sets, strong_workout_duration_by_type,
-                            strong_workouts)
+from init.questions import (apple_calories, strong_count_by_workout_type,
+                            strong_sets_by_workout_type,
+                            strong_volume_by_exercise_type,
+                            strong_workout_duration_by_type)
 from loguru import logger
 
 # Load environment variables from the .env file
@@ -27,9 +28,9 @@ if mb:
 
     # Inside the Strong App Collection
     strong_workout_duration_by_type(mb)
-    strong_sets(mb)
-    strong_exercises_by_volume(mb)
-    strong_workouts(mb)
+    strong_sets_by_workout_type(mb)
+    strong_volume_by_exercise_type(mb)
+    strong_count_by_workout_type(mb)
 
     # Inside the Apple Health Collection
     apple_calories(mb)

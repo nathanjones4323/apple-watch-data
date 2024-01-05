@@ -15,10 +15,15 @@ def get_field_metadata(mb: Metabase_API, table_name: str, field_name: str) -> in
 
 def get_field_mappings(mb: Metabase_API, table_field_tuples: list) -> dict:
     """Gets the field mappings for a given list of table and field tuples."""
-    field_mappings = {}
+    field_mapping_list = []
+    field_mapping = {}
     for table_name, field_name in table_field_tuples:
         field_id, field_display_name = get_field_metadata(
             mb, table_name, field_name)
-        field_mappings[field_display_name] = field_id
+        field_mapping["field_id"] = field_id
+        field_mapping["field_name"] = field_name
+        field_mapping["field_table_name"] = table_name
+        field_mapping["field_display_name"] = field_display_name
+        field_mapping_list.append(field_mapping)
 
-    return field_mappings
+    return field_mapping_list

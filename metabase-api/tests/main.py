@@ -2,8 +2,14 @@ import os
 import uuid
 
 from dotenv import load_dotenv
+from filters.utils import get_field_mappings
 from loguru import logger
 from metabase_api import Metabase_API
+from queries.apple_health import query_calories_burned
+from queries.strong import (query_count_by_workout_type,
+                            query_duration_by_workout_type,
+                            query_sets_by_workout_type,
+                            query_volume_by_exercise_type)
 
 dotenv_path = "./metabase/.env"
 try:
@@ -44,7 +50,7 @@ def set_visualization_settings(show_values: bool = True, x_axis_title: str = Non
     return visualization_settings
 
 
-def create_sql_question(mb: Metabase_API, query: str, display: str = "table", question_name: str = "test_card", db_id: int = 2, collection_id: int = 2, table_id: int = 48, visualization_settings: dict = None):
+def create_sql_question(mb: Metabase_API, query: str, display: str = "table", question_name: str = "test_card", db_id: int = 2, collection_id: int = 2, table_id: int = 48, visualization_settings: dict = None, is_timeseries: bool = True):
     try:
         # Parse the table name from the query
         table_name = query.strip().split("from")[1].strip().split("\n")[0]
@@ -91,6 +97,10 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         },
         "visualization_settings": visualization_settings
     }
+    # If the question is not a timeseries, remove date_granularity from the nested template-tags dict, ie, Remove `date_granularity` from `my_custom_json`
+    if is_timeseries == False:
+        del my_custom_json["dataset_query"]["native"]["template-tags"]["date_granularity"]
+
     try:
         api_response = mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
                                       table_id=table_id, custom_json=my_custom_json)
@@ -99,56 +109,73 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         logger.error(f"Could not create question - {question_name}\n{e}")
 
 
-def get_field_metadata(mb: Metabase_API, table_name: str, field_name: str) -> int:
-    """Gets the field metadata for a given table and field name."""
-
-    try:
-        table_metadata = mb.get_table_metadata(table_name=table_name)
-        logger.success(
-            f"Successfully retrieved table metadata for {table_name}")
-    except Exception as e:
-        logger.error(
-            f"Could not retrieve table metadata for {table_name}\n{e}")
-
-    field_dictionary = [dictionary for dictionary in table_metadata["fields"]
-                        if dictionary["name"] == field_name][0]
-    field_id = field_dictionary["id"]
-    field_display_name = field_dictionary["display_name"]
-
-    return field_id, field_display_name
+############################################
+# Strong App Questions
+############################################
 
 
-def get_field_mappings(mb: Metabase_API, table_field_tuples: list) -> dict:
-    """Gets the field mappings for a given list of table and field tuples."""
-    field_mapping_list = []
-    field_mapping = {}
-    for table_name, field_name in table_field_tuples:
-        field_id, field_display_name = get_field_metadata(
-            mb, table_name, field_name)
-        field_mapping["field_id"] = field_id
-        field_mapping["field_name"] = field_name
-        field_mapping["field_table_name"] = table_name
-        field_mapping["field_display_name"] = field_display_name
-        field_mapping_list.append(field_mapping)
-
-    return field_mapping_list
+def strong_workout_duration_by_type(mb: Metabase_API):
+    query = query_duration_by_workout_type()
+    visualization_settings = set_visualization_settings(
+        x_axis_title="Workout Type",
+        y_axis_title="Avg. Workout Duration (min)",
+        dimensions=["workout_name"],
+        metrics=["average_workout_length_minutes",
+                 "median_workout_length_minutes"]
+    )
+    create_sql_question(mb, query=query, question_name="Workout Duration by Type",
+                        display="bar", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings, is_timeseries=False)
 
 
-query = """
-        select 
-            date_trunc({{date_granularity}}, created_at) as time_period
-            , workout_name
-            , exercise_name
-            , count(*) as number_of_sets
-        from strong_app_raw
-        where 1=1
-            [[ and {{created_at}} ]]
-        group by time_period, workout_name, exercise_name
-        order by time_period desc, number_of_sets desc
-        """
-visualization_settings = set_visualization_settings(
-    dimensions=["time_period", "workout_name", "exercise_name"],
-    metrics=["time_period", "workout_name", "exercise_name"]
-)
-create_sql_question(mb, query=query, question_name="Test Card",
-                    display="table", db_id=2, collection_id=2, table_id=40, visualization_settings=visualization_settings)
+def strong_sets_by_workout_type(mb: Metabase_API):
+    query = query_sets_by_workout_type()
+    visualization_settings = set_visualization_settings(
+        x_axis_title="Time Period",
+        y_axis_title="Number of Sets",
+        dimensions=["time_period", "workout_name"],
+        metrics=["number_of_sets"]
+    )
+    create_sql_question(mb, query=query, question_name="Sets Over Time",
+                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings, is_timeseries=True)
+
+
+def strong_volume_by_exercise_type(mb: Metabase_API):
+    query = query_volume_by_exercise_type()
+    visualization_settings = set_visualization_settings(
+        dimensions=["time_period", "workout_name", "exercise_name"],
+        metrics=["time_period", "workout_name", "exercise_name"]
+    )
+    create_sql_question(mb, query=query, question_name="Exercises by Volume",
+                        display="table", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings, is_timeseries=True)
+
+
+def strong_count_by_workout_type(mb: Metabase_API):
+    query = query_count_by_workout_type()
+    visualization_settings = set_visualization_settings(
+        x_axis_title="Time Period",
+        y_axis_title="Number of Sets",
+        dimensions=["time_period", "workout_name"],
+        metrics=["number_of_workout_days"]
+    )
+    create_sql_question(mb, query=query, question_name="Workouts Over Time",
+                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings, is_timeseries=True)
+
+
+############################################
+# Apple Health Questions
+############################################
+def apple_calories(mb: Metabase_API):
+    query = query_calories_burned()
+    visualization_settings = set_visualization_settings(
+        x_axis_title="Time Period",
+        y_axis_title="Calories Burned",
+        dimensions=["time_period"],
+        metrics=["total_calories_burned",
+                 "active_calories_burned", "resting_calories_burned"]
+    )
+    create_sql_question(mb, query=query, question_name="Calories Burned Over Time",
+                        display="line", db_id=2, collection_id=3, table_id=40, visualization_settings=visualization_settings, is_timeseries=True)
+
+
+############################################ TESTS ############################################
+strong_count_by_workout_type(mb)

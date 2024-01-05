@@ -33,13 +33,16 @@ def set_visualization_settings(show_values: bool = True, x_axis_title: str = Non
     return visualization_settings
 
 
-def create_sql_question(mb: Metabase_API, query: str, display: str = "table", question_name: str = "test_card", db_id: int = 2, collection_id: int = 2, table_id: int = 48, visualization_settings: dict = None):
+def create_sql_question(mb: Metabase_API, query: str, display: str = "table", question_name: str = "test_card", db_id: int = 2, collection_id: int = 2, table_id: int = 48, visualization_settings: dict = None, is_timeseries: bool = True):
     try:
         # Parse the table name from the query
-        table_name = query.strip().split("from")[1].strip().split("\n")[0]
-        # Parse the timestamp field name from the query
-        timestamp_field_name = query.strip().split(
-            "date_trunc({{date_granularity}}, ")[1].strip().split(")")[0]
+        table_name = query.split("from")[1].strip().split("\n")[0]
+        if is_timeseries == True:
+            # Parse the timestamp field name from the query
+            timestamp_field_name = query.split(
+                "date_trunc({{date_granularity}}, ")[1].strip().split(")")[0]
+        else:
+            timestamp_field_name = "date_granularity"
         # Get the field mappings
         field_mappings = get_field_mappings(mb=mb, table_field_tuples=[
                                             (table_name, timestamp_field_name)])
@@ -80,6 +83,10 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         },
         "visualization_settings": visualization_settings
     }
+    # If the question is not a timeseries, remove date_granularity from the nested template-tags dict, ie, Remove `date_granularity` from `my_custom_json`
+    if is_timeseries == False:
+        del my_custom_json["dataset_query"]["native"]["template-tags"]["date_granularity"]
+
     try:
         api_response = mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
                                       table_id=table_id, custom_json=my_custom_json)
@@ -103,7 +110,7 @@ def strong_workout_duration_by_type(mb: Metabase_API):
                  "median_workout_length_minutes"]
     )
     create_sql_question(mb, query=query, question_name="Workout Duration by Type",
-                        display="bar", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
+                        display="bar", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings, is_timeseries=False)
 
 
 def strong_sets_by_workout_type(mb: Metabase_API):
@@ -115,7 +122,7 @@ def strong_sets_by_workout_type(mb: Metabase_API):
         metrics=["number_of_sets"]
     )
     create_sql_question(mb, query=query, question_name="Sets Over Time",
-                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
+                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings, is_timeseries=True)
 
 
 def strong_volume_by_exercise_type(mb: Metabase_API):
@@ -125,7 +132,7 @@ def strong_volume_by_exercise_type(mb: Metabase_API):
         metrics=["time_period", "workout_name", "exercise_name"]
     )
     create_sql_question(mb, query=query, question_name="Exercises by Volume",
-                        display="table", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
+                        display="table", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings, is_timeseries=True)
 
 
 def strong_count_by_workout_type(mb: Metabase_API):
@@ -137,7 +144,7 @@ def strong_count_by_workout_type(mb: Metabase_API):
         metrics=["number_of_workout_days"]
     )
     create_sql_question(mb, query=query, question_name="Workouts Over Time",
-                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
+                        display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings, is_timeseries=True)
 
 
 ############################################
@@ -153,4 +160,4 @@ def apple_calories(mb: Metabase_API):
                  "active_calories_burned", "resting_calories_burned"]
     )
     create_sql_question(mb, query=query, question_name="Calories Burned Over Time",
-                        display="line", db_id=2, collection_id=3, table_id=40, visualization_settings=visualization_settings)
+                        display="line", db_id=2, collection_id=3, table_id=40, visualization_settings=visualization_settings, is_timeseries=True)
