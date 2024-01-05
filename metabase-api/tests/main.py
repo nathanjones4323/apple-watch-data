@@ -45,6 +45,23 @@ def set_visualization_settings(show_values: bool = True, x_axis_title: str = Non
 
 
 def create_sql_question(mb: Metabase_API, query: str, display: str = "table", question_name: str = "test_card", db_id: int = 2, collection_id: int = 2, table_id: int = 48, visualization_settings: dict = None):
+    try:
+        # Parse the table name from the query
+        table_name = query.strip().split("from")[1].strip().split("\n")[0]
+        # Parse the timestamp field name from the query
+        timestamp_field_name = query.strip().split(
+            "date_trunc({{date_granularity}}, ")[1].strip().split(")")[0]
+        # Get the field mappings
+        field_mappings = get_field_mappings(mb=mb, table_field_tuples=[
+                                            (table_name, timestamp_field_name)])
+        # Pull out field data from the field mappings
+        field_id = field_mappings[0]["field_id"]
+        field_name = field_mappings[0]["field_name"]
+        field_display_name = field_mappings[0]["field_display_name"]
+
+    except Exception as e:
+        logger.error(f"Could not parse table name from query: {e}")
+        logger.debug(f"Query: {query}")
 
     my_custom_json = {
         'name': question_name,
@@ -61,12 +78,12 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
                          "display-name": "Date Granularity",
                          "required": True,
                          "default": ["Week"]},
-                    "created_at":
+                    field_name:
                         {"type": "dimension",
-                         "name": "created_at",
+                         "name": field_name,
                          "id": str(uuid.uuid4()),
-                         "display-name": "Created At",
-                         "dimension": ["field", 457, None],
+                         "display-name": field_display_name,
+                         "dimension": ["field", field_id, None],
                          "widget-type": "date/all-options"}
                 }
             },
@@ -74,7 +91,6 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         },
         "visualization_settings": visualization_settings
     }
-    logger.debug(f"my_custom_json: {my_custom_json}")
     try:
         api_response = mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
                                       table_id=table_id, custom_json=my_custom_json)
@@ -83,29 +99,17 @@ def create_sql_question(mb: Metabase_API, query: str, display: str = "table", qu
         logger.error(f"Could not create question - {question_name}\n{e}")
 
 
-query = """
-        select 
-            date_trunc({{date_granularity}}, created_at) as time_period
-            , workout_name
-            , exercise_name
-            , count(*) as number_of_sets
-        from strong_app_raw
-        where 1=1
-            [[ and {{created_at}} ]]
-        group by time_period, workout_name, exercise_name
-        order by time_period desc, number_of_sets desc
-        """
-visualization_settings = set_visualization_settings(
-    dimensions=["time_period", "workout_name", "exercise_name"],
-    metrics=["time_period", "workout_name", "exercise_name"]
-)
-create_sql_question(mb, query=query, question_name="Test Card",
-                    display="table", db_id=2, collection_id=2, table_id=40, visualization_settings=visualization_settings)
-
-
 def get_field_metadata(mb: Metabase_API, table_name: str, field_name: str) -> int:
     """Gets the field metadata for a given table and field name."""
-    table_metadata = mb.get_table_metadata(table_name=table_name)
+
+    try:
+        table_metadata = mb.get_table_metadata(table_name=table_name)
+        logger.success(
+            f"Successfully retrieved table metadata for {table_name}")
+    except Exception as e:
+        logger.error(
+            f"Could not retrieve table metadata for {table_name}\n{e}")
+
     field_dictionary = [dictionary for dictionary in table_metadata["fields"]
                         if dictionary["name"] == field_name][0]
     field_id = field_dictionary["id"]
@@ -130,5 +134,21 @@ def get_field_mappings(mb: Metabase_API, table_field_tuples: list) -> dict:
     return field_mapping_list
 
 
-field_mappings = get_field_mappings(
-    mb, [("strong_app_raw", "created_at"), ("apple_health_raw", "end_date")])
+query = """
+        select 
+            date_trunc({{date_granularity}}, created_at) as time_period
+            , workout_name
+            , exercise_name
+            , count(*) as number_of_sets
+        from strong_app_raw
+        where 1=1
+            [[ and {{created_at}} ]]
+        group by time_period, workout_name, exercise_name
+        order by time_period desc, number_of_sets desc
+        """
+visualization_settings = set_visualization_settings(
+    dimensions=["time_period", "workout_name", "exercise_name"],
+    metrics=["time_period", "workout_name", "exercise_name"]
+)
+create_sql_question(mb, query=query, question_name="Test Card",
+                    display="table", db_id=2, collection_id=2, table_id=40, visualization_settings=visualization_settings)
