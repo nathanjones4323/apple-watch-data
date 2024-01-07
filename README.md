@@ -190,8 +190,13 @@ docker-compose up --force-recreate --build -d && docker image prune -f
 
 *TODOs are in order of priority*
 
-* Finish adding field filters dynamically based on the query (modify the `field_mappings = get_field_mappings(mb=mb, table_field_tuples=[(table_name, timestamp_field_name)])` part inside the `create_sql_timeseries_question` function)
-  * Need to replace the `timestamp_field_name` with all field names and pass them all into `get_field_mappings`
+* Need to update this step from `questions.py`
+```python
+# Add the field filters to the payload (template-tags)
+  my_custom_json = add_field_filters(
+      mappings=field_mappings, my_custom_json=my_custom_json)
+```
+To handle the `[[ and reps >= {{min_reps}} ]]` min max filters. Right now it is only set up for field filters
 
 * Update the **Getting Started** section of the README with all of the steps to get the app running and initialized
 * Add Apple Health Questions

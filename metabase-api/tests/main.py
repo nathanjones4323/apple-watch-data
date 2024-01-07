@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 
 from dotenv import load_dotenv
@@ -178,18 +179,52 @@ def set_visualization_settings(show_values: bool = True, x_axis_title: str = Non
     return visualization_settings
 
 
-query = """
-        select 
-            date_trunc({{date_granularity}}, created_at) as time_period
-            , workout_name
-            , count(*) as number_of_sets
-        from strong_app_raw
-        where 1=1
-            [[ and {{workout_name}} ]]
-        group by time_period, workout_name
-        order by time_period, number_of_sets desc
+def add_strong_field_filters_to_sql(query: str) -> str:
+    """Replaces generic `where 1=1` with Metabase field filters for the Strong App.
+
+    Args:
+        query (str): The SQL query to be modified.
+
+    Returns:
+        str: The modified SQL query with Strong App field filters.
+    """
+
+    return query.replace("where 1=1", "where 1=1\n    [[ and {{created_at}} ]]\n    [[ and {{workout_name}} ]]\n    [[ and {{exercise_name}} }} ]]\n    [[ and reps >= {{min_reps}} ]]\n    [[ and reps <= {{max_reps}} ]]\n    [[ and weight >= {{min_weight}} ]]\n    [[ and weight <= {{max_weight}} ]]\n    [[ and set_order >= {{min_set_order}} ]]\n    [[ and set_order <= {{max_set_order}} ]]")
+
+
+def query_duration_by_workout_type():
+    query = """select 
+    date_trunc({{date_granularity}}, created_at) as time_period
+    , workout_name
+    , count(*) as number_of_sets
+from strong_app_raw
+where 1=1
+group by time_period, workout_name
+order by time_period, number_of_sets desc
         """
-query = query.strip()
+    query = add_strong_field_filters_to_sql(query)
+    return query.strip()
+
+
+query = query_duration_by_workout_type()
+print(query)
+
+table_name = query.split("from")[1].strip().split("\n")[0]
+
+# Extract filter references
+filter_references = re.findall(r"\{\{(\w+)\}\}", query)
+
+# Remove `date_granularity` from the list of filter references
+filter_references.remove("date_granularity")
+
+# Create a list of tuples of the table name and the filter reference
+table_filter_tuples = [(table_name, filter_reference)
+                       for filter_reference in filter_references]
+
+# Get the field mappings
+field_mappings = get_field_mappings(
+    mb=mb, table_field_tuples=table_filter_tuples)
+
 visualization_settings = set_visualization_settings(
     x_axis_title="Time Period",
     y_axis_title="Number of Sets",

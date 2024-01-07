@@ -1,3 +1,4 @@
+import re
 import uuid
 
 from filters.utils import add_field_filters, get_field_mappings
@@ -83,11 +84,21 @@ def create_sql_timeseries_question(mb: Metabase_API, query: str, display: str = 
     try:
         # Parse the table name from the query
         table_name = query.split("from")[1].strip().split("\n")[0]
-        timestamp_field_name = query.split(
-            "date_trunc({{date_granularity}}, ")[1].strip().split(")")[0]
+
+        # Extract filter references
+        filter_references = re.findall(r'\[\[\s+and\s+{{(\w+)}}\s+\]\]', query)
+
+        # CAN USE THIS ONCE MIN MAX FILTERS ARE ADDED TO THE STRONG APP
+        # filter_references = re.findall(r"\{\{(\w+)\}\}", query)
+        # filter_references.remove("date_granularity")
+
+        # Create a list of tuples of the table name and the filter reference
+        table_filter_tuples = [(table_name, filter_reference)
+                               for filter_reference in filter_references]
+
         # Get the field mappings
-        field_mappings = get_field_mappings(mb=mb, table_field_tuples=[
-                                            (table_name, timestamp_field_name)])
+        field_mappings = get_field_mappings(
+            mb=mb, table_field_tuples=table_filter_tuples)
 
     except Exception as e:
         logger.error(f"Could not parse table name from query: {e}")
