@@ -190,29 +190,8 @@ docker-compose up --force-recreate --build -d && docker image prune -f
 
 *TODOs are in order of priority*
 
-* Debug this error
-```
-2024-01-05 07:42:05.875 | ERROR    | init.questions:create_sql_question:52 - Could not parse table name from query: list index out of range
-2024-01-05 07:42:05.875 | DEBUG    | init.questions:create_sql_question:53 - Query: select 
-            workout_name
-            , count(distinct workout_id) as number_of_workouts
-            , avg(duration) / 60.0 as average_workout_length_minutes
-            , percentile_cont(0.5) within group (order by duration) / 60.0 as median_workout_length_minutes
-        from strong_app_raw
-        where 1=1
-            [[ and {{created_at}} ]]
-        group by workout_name
-        order by average_workout_length_minutes desc
-Traceback (most recent call last):
-  File "/app/./metabase-api/main.py", line 30, in <module>
-    strong_workout_duration_by_type(mb)
-  File "/app/metabase-api/init/questions.py", line 109, in strong_workout_duration_by_type
-    create_sql_question(mb, query=query, question_name="Workout Duration by Type",
-  File "/app/metabase-api/init/questions.py", line 70, in create_sql_question
-    field_name:
-    ^^^^^^^^^^
-UnboundLocalError: cannot access local variable 'field_name' where it is not associated with a value
-```
+* Finish adding field filters dynamically based on the query (modify the `field_mappings = get_field_mappings(mb=mb, table_field_tuples=[(table_name, timestamp_field_name)])` part inside the `create_sql_timeseries_question` function)
+  * Need to replace the `timestamp_field_name` with all field names and pass them all into `get_field_mappings`
 
 * Update the **Getting Started** section of the README with all of the steps to get the app running and initialized
 * Add Apple Health Questions
