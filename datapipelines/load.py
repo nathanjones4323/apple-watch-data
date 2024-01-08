@@ -19,18 +19,19 @@ except:
     logger.error("Could not load .env file")
 
 
-def load_apple_health_data(transformed_data):
+def load_apple_health_data(transformed_data, table_name="apple_health_activity_raw"):
     try:
         conn = init_db_connection()
         # Write to Database
-        transformed_data.to_sql(name="apple_health_raw", con=conn,
+        transformed_data.to_sql(name=table_name, con=conn,
                                 schema="public", if_exists="replace", index_label="id")
         # Close out DB connection
         conn.close()
         logger.success(
-            f"Loaded {transformed_data.shape[0]} rows of Apple Health data to DB")
+            f"Loaded {transformed_data.shape[0]} rows of Apple Health data to DB into the {table_name} table")
     except:
-        logger.error("Could not load apple_health data to DB")
+        logger.error(
+            f"Could not load Apple Health data to DB into the {table_name} table")
 
 
 def load_strong_app_data(transformed_data):
@@ -44,7 +45,7 @@ def load_strong_app_data(transformed_data):
         logger.success(
             f"Loaded {transformed_data.shape[0]} rows of Strong App data to DB")
     except:
-        logger.error("Could not load strong_app data to DB")
+        logger.error("Could not load Strong App data to DB")
 
 
 # Add a 10 second delay to allow the Metabase backend to start before trying to connect to it

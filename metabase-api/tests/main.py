@@ -1,235 +1,103 @@
-import os
+import datetime
 import re
-import uuid
+import xml.etree.ElementTree as ET
 
-from dotenv import load_dotenv
-from loguru import logger
-from metabase_api import Metabase_API
-
-dotenv_path = "./metabase/.env"
-try:
-    load_dotenv(dotenv_path)
-    logger.success("Loaded .env file")
-except:
-    logger.error("Could not load .env file")
-
-try:
-    # Have to use the container name as the host name because that is the name of the service in the docker-compose.yml file
-    mb = Metabase_API(domain="http://localhost:3000/",
-                      email=os.getenv("MB_ADMIN_EMAIL"), password=os.getenv("MB_ADMIN_PASSWORD"))
-    logger.success("Connected to Metabase API")
-except Exception as e:
-    logger.error(f"Could not connect to Metabase API: {e}")
+import pandas as pd
 
 
-def field_base_type_to_widget_type(base_type: str) -> str:
-    """Converts a field base type to a widget type."""
-    base_type_to_widget_type = {
-        "type/BigInteger": "number",
-        "type/Boolean": "category",
-        "type/Date": "date/all-options",
-        "type/DateTime": "date/all-options",
-        "type/DateTimeWithLocalTZ": "date/all-options",
-        "type/Decimal": "number",
-        "type/Float": "number",
-        "type/Integer": "number",
-        "type/Text": "string/=",
-    }
-    return base_type_to_widget_type[base_type]
+def camel_to_snake(camel_case):
+  # Check for an uppercase letter in the string
+    if re.search(r'[A-Z]', camel_case):
+        # Replace all uppercase letters with an underscore and lowercase letter
+        snake_case = re.sub(r'([A-Z])', lambda x: '_' +
+                            x.group(0).lower(), camel_case)
+        # Remove the first underscore only if it is the first character in the string
+        snake_case = re.sub(r'^_', '', snake_case)
+        # Remove any whitespaces
+        snake_case = re.sub(r'\s', '', snake_case)
+    else:
+        snake_case = camel_case.lower()
+        # Remove any whitespaces
+        snake_case = re.sub(r'\s', '', snake_case)
+    return snake_case
 
 
-def get_field_mappings(mb: Metabase_API, table_field_tuples: list) -> list:
-    """Gets the field mappings for a given list of table and field tuples."""
-    field_mapping_list = []
-    for table_name, field_name in table_field_tuples:
-        # Get the field metadata
-        table_metadata = mb.get_table_metadata(table_name=table_name)
-        field_dictionary = [dictionary for dictionary in table_metadata["fields"]
-                            if dictionary["name"] == field_name][0]
-        # Extract the field metadata we want
-        field_dictionary["field_id"] = field_dictionary["id"]
-        field_dictionary["field_name"] = field_name
-        field_dictionary["field_table_name"] = table_name
-        field_dictionary["field_display_name"] = field_dictionary["display_name"]
-        field_dictionary["field_base_type"] = field_dictionary["base_type"]
-        # Add the field widget-type
-        field_dictionary["field_widget_type"] = field_base_type_to_widget_type(
-            field_dictionary["base_type"])
+# create element tree object
+tree = ET.parse("./data/apple_health_export/export.xml")
 
-        # Add the field dictionary to the list
-        field_mapping_list.append(field_dictionary)
+# for every health record, extract the attributes into a dictionary (columns). Then create a list (rows).
+root = tree.getroot()
+record_list = [x.attrib for x in root.iter('Record')]
 
-    return field_mapping_list
+# create DataFrame from a list (rows) of dictionaries (columns)
+data = pd.DataFrame(record_list)
+# proper type to dates
+for col in ['creationDate', 'startDate', 'endDate']:
+    data[col] = pd.to_datetime(data[col])
 
 
-def add_field_filters(mappings: list, my_custom_json: dict) -> dict:
-    """Add template tag sub dictionaries under the `template-tags` key in `my_custom_json`
+# value is numeric, NaN if fails
+data['value'] = pd.to_numeric(data['value'], errors='coerce')
 
-    `my_custom_json` is the dictionary that will be passed to `create_sql_question()` in the Metabase API post request.
+# some records do not measure anything, just count occurences
+# filling with 1.0 (= one time) makes it easier to aggregate
+data['value'] = data['value'].fillna(1.0)
 
-    This is what adds field filters to the question and links the correct database fields to the question.
+# shorter observation names: use vectorized replace function
+data['type'] = data['type'].str.replace('HKQuantityTypeIdentifier', '')
+data['type'] = data['type'].str.replace('HKCategoryTypeIdentifier', '')
+data['type'] = data['type'].str.replace(
+    'HKDataTypeSleepDurationGoal', 'SleepDurationGoal')
 
-    Args:
-        mappings (list): A list of field mapping dictionaries returned by `get_field_mappings()`
-        my_custom_json (dict): A dictionary that will be passed to `create_sql_question()` in the Metabase API post request.
+# pivot and resample
+pivot_df = data.pivot_table(
+    index=['endDate', 'creationDate', 'startDate', 'sourceName'], columns='type', values='value')
+pivot_df.columns
+# Make endDate a column instead of the index
+pivot_df.reset_index(inplace=True)
 
-    Returns:
-        dict: The updated `my_custom_json` dictionary.
-    """
-    # Create a dictionary of template tags
-    template_tags = {}
-    # Iterate over mappings and add template tags
-    for mapping in mappings:
-        template_tags[mapping["field_name"]] = {
-            "type": "dimension",
-            "name": mapping["field_name"],
-            "id": str(uuid.uuid4()),
-            "display-name": mapping["field_display_name"],
-            "dimension": ["field", mapping["field_id"], None],
-            "widget-type": mapping["field_widget_type"]
-        }
+# rename columns
+pivot_df.columns = [camel_to_snake(col) for col in pivot_df.columns]
+pivot_df.shape
+sleep_df = pivot_df[(pivot_df["sleep_analysis"].notnull()) & (
+    pivot_df["source_name"].str.contains("Watch", regex=False))]
+activity_df = pivot_df[(pivot_df["sleep_analysis"].isnull())]
 
-    # Iterate over template_tags and update my_custom_json
-    for field_name, field_data in template_tags.items():
-        field_id = field_data['dimension'][1]
-        field_display_name = field_data['display-name']
-        field_widget_type = field_data['widget-type']
+sleep_df = pivot_df[pivot_df["sleep_analysis"].notnull()]
+sleep_df = sleep_df[['creation_date', 'start_date', 'end_date',
+                     'sleep_analysis', 'apple_sleeping_wrist_temperature', 'sleep_duration_goal', 'source_name']]
 
-        # Update my_custom_json with the corresponding sub-dictionary
-        my_custom_json['dataset_query']['native']['template-tags'][field_name] = {
-            "type": "dimension",
-            "name": field_name,
-            "id": str(uuid.uuid4()),
-            "display-name": field_display_name,
-            "dimension": ["field", field_id, None],
-            "widget-type": field_widget_type
-        }
+# calulate time between date(s)
+sleep_df['time_asleep'] = sleep_df['end_date'] - sleep_df['start_date']
 
-    return my_custom_json
+# records are grouped by creation date, so lets used that to sum up the values we need here
+# total time asleep as a sum of the asleep time
+# awake and bed times are max's and min's
+# sleep count is the number of times the Apple Watch detected movement
+# rem is the number of sleep cycles over 90 minutes (divded by 90 if they were longer than 1 cycle)
+sleep_df = sleep_df.groupby('creation_date').agg(total_time_asleep=('time_asleep', 'sum'),
+                                                 bed_time=(
+    'start_date', 'min'),
+    awake_time=(
+    'end_date', 'max'),
+    sleep_counts=(
+    'creation_date', 'count'),
+    rem_cycles=pd.NamedAgg(column='time_asleep', aggfunc=lambda x: (x // datetime.timedelta(minutes=90)).sum()))
 
+# Time in Bed will be different to Apple's reported figure -
+# as Apple uses the time you place your iPhone down as an additional
+# datapoint, which of course, is incorrect if you try to maintain
+# some device separation in the evenings.
+# For now - we will just use Apple Watch data here
+sleep_df['time_in_bed'] = sleep_df['awake_time'] - sleep_df['bed_time']
+sleep_df['restless_time'] = sleep_df['time_in_bed'] - \
+    sleep_df['total_time_asleep']
 
-def create_sql_timeseries_question(mb: Metabase_API, query: str, display: str = "table", question_name: str = "test_card", db_id: int = 2, collection_id: int = 2, table_id: int = 48, visualization_settings: dict = None):
-    try:
-        # Parse the table name from the query
-        table_name = query.split("from")[1].strip().split("\n")[0]
-        timestamp_field_name = query.split(
-            "date_trunc({{date_granularity}}, ")[1].strip().split(")")[0]
-        # Get the field mappings
-        field_mappings = get_field_mappings(mb=mb, table_field_tuples=[
-                                            (table_name, timestamp_field_name)])
+# Convert to seconds
+sleep_df['total_time_asleep'] = sleep_df['total_time_asleep'].dt.total_seconds()
+sleep_df['time_in_bed'] = sleep_df['time_in_bed'].dt.total_seconds()
+sleep_df['restless_time'] = sleep_df['restless_time'].dt.total_seconds()
 
-    except Exception as e:
-        logger.error(f"Could not parse table name from query: {e}")
-        logger.debug(f"Query: {query}")
-
-    # Create the payload for the Metabase API post request
-    my_custom_json = {
-        'name': question_name,
-        "display": display,
-        'dataset_query': {
-            'database': db_id,
-            'native': {
-                'query': query.strip(),
-                'template-tags': {
-                    "date_granularity":
-                        {"type": "text",
-                         "name": "date_granularity",
-                         "id": str(uuid.uuid4()),
-                         "display-name": "Date Granularity",
-                         "required": True,
-                         "default": ["Week"]}
-                }
-            },
-            'type': 'native',
-        },
-        "visualization_settings": visualization_settings
-    }
-    # Add the field filters to the payload (template-tags)
-    my_custom_json = add_field_filters(
-        mappings=field_mappings, my_custom_json=my_custom_json)
-
-    try:
-        api_response = mb.create_card(question_name, db_id=db_id, collection_id=collection_id,
-                                      table_id=table_id, custom_json=my_custom_json)
-        logger.success(f"Successfully created question - {question_name}")
-    except Exception as e:
-        logger.error(f"Could not create question - {question_name}\n{e}")
-
-
-def set_visualization_settings(show_values: bool = True, x_axis_title: str = None, y_axis_title: str = None, dimensions: list = None, metrics: list = None):
-    """Sets the visualization settings for a Metabase question.
-
-    Args:
-        show_values (bool, optional): True to show the data points in a visual, False to hide them. Defaults to True.
-        x_axis_title (str, optional): The title of the x-axis. Defaults to None, which will use the SQL column name.
-        y_axis_title (str, optional): The title of the y-axis. Defaults to None, which will leave the y-axis untitled.
-        dimensions (list, optional): The variables to group on / have on the x-axis (order matters). Defaults to None.
-        metrics (list, optional): The variables to plot (order matters). Defaults to None.
-
-    Returns:
-        dict: A dictionary of the visualization settings to be passed to the `create_sql_question` and `create_sql_timeseries_question` functions.
-    """
-    visualization_settings = {
-        "graph.show_values": show_values,
-        "graph.x_axis.title_text": x_axis_title,
-        "graph.y_axis.title_text": y_axis_title,
-        "graph.dimensions": dimensions,
-        "graph.metrics": metrics
-    }
-    return visualization_settings
-
-
-def add_strong_field_filters_to_sql(query: str) -> str:
-    """Replaces generic `where 1=1` with Metabase field filters for the Strong App.
-
-    Args:
-        query (str): The SQL query to be modified.
-
-    Returns:
-        str: The modified SQL query with Strong App field filters.
-    """
-
-    return query.replace("where 1=1", "where 1=1\n    [[ and {{created_at}} ]]\n    [[ and {{workout_name}} ]]\n    [[ and {{exercise_name}} }} ]]\n    [[ and reps >= {{min_reps}} ]]\n    [[ and reps <= {{max_reps}} ]]\n    [[ and weight >= {{min_weight}} ]]\n    [[ and weight <= {{max_weight}} ]]\n    [[ and set_order >= {{min_set_order}} ]]\n    [[ and set_order <= {{max_set_order}} ]]")
-
-
-def query_duration_by_workout_type():
-    query = """select 
-    date_trunc({{date_granularity}}, created_at) as time_period
-    , workout_name
-    , count(*) as number_of_sets
-from strong_app_raw
-where 1=1
-group by time_period, workout_name
-order by time_period, number_of_sets desc
-        """
-    query = add_strong_field_filters_to_sql(query)
-    return query.strip()
-
-
-query = query_duration_by_workout_type()
-print(query)
-
-table_name = query.split("from")[1].strip().split("\n")[0]
-
-# Extract filter references
-filter_references = re.findall(r"\{\{(\w+)\}\}", query)
-
-# Remove `date_granularity` from the list of filter references
-filter_references.remove("date_granularity")
-
-# Create a list of tuples of the table name and the filter reference
-table_filter_tuples = [(table_name, filter_reference)
-                       for filter_reference in filter_references]
-
-# Get the field mappings
-field_mappings = get_field_mappings(
-    mb=mb, table_field_tuples=table_filter_tuples)
-
-visualization_settings = set_visualization_settings(
-    x_axis_title="Time Period",
-    y_axis_title="Number of Sets",
-    dimensions=["time_period", "workout_name"],
-    metrics=["number_of_sets"]
-)
-create_sql_timeseries_question(mb, query=query, question_name="Sets Over Time",
-                               display="line", db_id=2, collection_id=2, table_id=48, visualization_settings=visualization_settings)
+# Rename columns to include _seconds indicating the value is in seconds
+sleep_df.rename(columns={'total_time_asleep': 'total_time_asleep_seconds',
+                         'time_in_bed': 'time_in_bed_seconds', 'restless_time': 'restless_time_seconds'}, inplace=True)
