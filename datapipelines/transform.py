@@ -112,13 +112,14 @@ def split_apple_health_data(data: pd.DataFrame) -> pd.DataFrame:
         # some device separation in the evenings.
         # For now - we will just use Apple Watch data here
         sleep_df['time_in_bed'] = sleep_df['awake_time'] - sleep_df['bed_time']
-        sleep_df['restless_time'] = sleep_df['time_in_bed'] - \
-            sleep_df['total_time_asleep']
 
         # Convert to seconds
         sleep_df['total_time_asleep'] = sleep_df['total_time_asleep'].dt.total_seconds()
         sleep_df['time_in_bed'] = sleep_df['time_in_bed'].dt.total_seconds()
-        sleep_df['restless_time'] = sleep_df['restless_time'].dt.total_seconds()
+
+        # Compute `restless_time`
+        sleep_df['restless_time'] = sleep_df['time_in_bed'] - \
+            sleep_df['total_time_asleep']
 
         # Rename columns to include _seconds indicating the value is in seconds
         sleep_df.rename(columns={'total_time_asleep': 'total_time_asleep_seconds',
