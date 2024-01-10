@@ -17,7 +17,6 @@
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting_started)
 - [Usage](#usage)
-- [Improvements](#improvements)
 - [TODO](#todo)
 
 ## 🧐 About <a name = "about"></a>
@@ -191,6 +190,14 @@ docker-compose up --force-recreate --build -d && docker image prune -f
 
 *TODOs are in order of priority*
 
+* Need to update this step from `questions.py`
+```python
+# Add the field filters to the payload (template-tags)
+  my_custom_json = add_field_filters(
+      mappings=field_mappings, my_custom_json=my_custom_json)
+```
+To handle the `[[ and reps >= {{min_reps}} ]]` min max filters. Right now it is only set up for field filters
+
 * Update the **Getting Started** section of the README with all of the steps to get the app running and initialized
 * Add Apple Health Questions
   * Sleep
@@ -247,7 +254,7 @@ docker-compose up --force-recreate --build -d && docker image prune -f
 
   * Research and brainstorm more questions
 
-* Create a dashboard with all of the questions
+* Create a dashboard with all of the questions ==> [Link to API documentation to automate adding questions to dashboards](https://www.metabase.com/docs/latest/api/dashboard#put-apidashboardid)
 * Make the start of the `init-metabase-questions` container wait using `docker-compose.yml` instead of using `time.sleep` with the `auth` function inside of `metabase-api/init/auth.py`
 * For the API to work, the Metabase admin must be logged in. This is not ideal. Need to find a way to authenticate the API calls without doing setup through the GUI.
 * Find a dynamic way to set the values for
