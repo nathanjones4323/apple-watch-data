@@ -36,6 +36,7 @@ select
 		else lowest_working_set_weight_lbs
 	end as new_working_set_weight
 from progressive_overload_data
+order by day_lift_performed desc, exercise_name
 """
     query = add_strong_field_filters_to_sql(query)
     return query.strip()
