@@ -256,6 +256,7 @@ To handle the `[[ and reps >= {{min_reps}} ]]` min max filters. Right now it is 
 
 * Create a dashboard with all of the questions ==> [Link to API documentation to automate adding questions to dashboards](https://www.metabase.com/docs/latest/api/dashboard#put-apidashboardid)
 * Make the start of the `init-metabase-questions` container wait using `docker-compose.yml` instead of using `time.sleep` with the `auth` function inside of `metabase-api/init/auth.py`
+* Make `is_initialized` function inside of `metabase-api/init/auth.py` check for each question's existence before skipping the full initialization process. This will let updates to the initialization process be applied after the initial run.
 * For the API to work, the Metabase admin must be logged in. This is not ideal. Need to find a way to authenticate the API calls without doing setup through the GUI.
 * Find a dynamic way to set the values for
   * graph.x_axis.title_text
