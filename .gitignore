@@ -1,6 +1,9 @@
 # Personal health data folder
 data/
 
+# Custom
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

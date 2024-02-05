@@ -43,15 +43,14 @@ order by time_period, number_of_sets desc
     return query.strip()
 
 
-def query_volume_by_exercise_type():
+def query_sets_by_exercise_type():
     query = """select
     date_trunc({{date_granularity}}, created_at) as time_period
-    , workout_name
     , exercise_name
     , count(*) as number_of_sets
 from strong_app_raw
 where 1=1
-group by time_period, workout_name, exercise_name
+group by time_period, exercise_name
 order by time_period desc, number_of_sets desc
 """
     query = add_strong_field_filters_to_sql(query)
